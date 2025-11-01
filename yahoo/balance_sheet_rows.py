@@ -1,0 +1,17 @@
+# NET_INCOME = "Net Income, Adj"
+# DEBT = "Net Debt"
+# EBIT = "Operating Profit (EBIT)"
+# EBITDA = "EBITDA"
+# EV = "Enterprise Value"
+# EPS = "Earnings per Share"
+# LAST_PRICE = "Last Price"
+# FREE_CASH_FLOW = "Free Cash Flow"
+DATE = 0
+NET_INCOME = 1
+DEBT = 2
+EBIT = 3
+EBITDA = 4
+EV = 5
+EPS = 6
+LAST_PRICE = 7
+FREE_CASH_FLOW = 8
