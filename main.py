@@ -14,17 +14,16 @@ def main(startk: int, endk: int):
     )
 
     fig, ax = plt.subplots()
-    ax.plot(dates, expected_prices)
-    plt.gcf().autofmt_xdate()
+    ax.plot(dates, expected_prices, label="expected")
 
-    ax.plot(dates, actual_prices)
-    plt.axvline(
-        x=dates[endk], color="red", linestyle="--", linewidth=2
-    )  # vertical line at x=3
+    ax.plot(dates, actual_prices, label="actual")
+    plt.axvline(x=dates[endk], color="red", linestyle="--", linewidth=2)
+
+    plt.legend()
     plt.show()
 
     # print(result, np.linalg.cond(result))
 
 
 if __name__ == "__main__":
-    main(0, 20)
+    main(1, 25)

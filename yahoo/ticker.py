@@ -104,19 +104,21 @@ class MyTicker:
         # self.avg_price[start:end] are the prices before the balance sheet
         # where P0 = self.avg_price[start:end], P1 = self.avg_price[start + 1:end + 1]
         # (P0; financials)(coeffs) = P1
-        
+
         return np.hstack(
             [
                 self.avg_price[start:end].reshape(-1, 1),
-                self.financials[start:end, 1:].astype(float),
+                self.financials[start:end, 1:].astype(float)
+                - self.financials[start - 1 : end - 1, 1:].astype(float),
             ]
         )
-    
+
     def get_coefficients(self, start: int, end: int) -> np.ndarray:
         # first price is the price before the first financial data
         # the price to be predicted starts 1 after
         avg_price = self.avg_price[start + 1 : end + 1].reshape(-1, 1)
         coeffs = np.linalg.pinv(self.get_coeff_matrix(start, end)) @ avg_price
+        print(self.get_coeff_matrix(start, end))
 
         return coeffs
 
