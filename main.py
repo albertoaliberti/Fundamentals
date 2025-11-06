@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 def main(startk: int, endk: int):
-    NFLX = MyTicker("NFLX")
+    NFLX = MyTicker("BYD")
     coeffs = NFLX.get_coefficients(startk, endk)
 
     expected_prices, actual_prices, dates = NFLX.get_coefficients_results(

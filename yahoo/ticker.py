@@ -37,7 +37,7 @@ class MyTicker:
                     self.__financials.append(
                         [from_bloomberg_str_date(date), *map(float, data)]
                     )
-            self.__financials = np.matrix(self.__financials)
+            self.__financials = np.array(self.__financials)
         return self.__financials
 
     @property
@@ -124,5 +124,5 @@ class MyTicker:
         return (
             self.get_coeff_matrix(start, end) @ coefficients,
             self.avg_price[start:end],
-            self.financials[start:end, DATE].A1.astype("datetime64[D]"),
+            self.financials[start:end, DATE].astype("datetime64[D]"),
         )
