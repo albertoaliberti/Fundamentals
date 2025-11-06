@@ -21,6 +21,10 @@ def from_yahoo_str_date(_date: date) -> date:
     return date(yy, mm, gg)
 
 
+def get_perc_delta(a, b):
+    return a / b
+
+
 class MyTicker:
     def __init__(self, ticker: str):
         self.ticker = ticker
@@ -37,7 +41,7 @@ class MyTicker:
                     self.__financials.append(
                         [from_bloomberg_str_date(date), *map(float, data)]
                     )
-            self.__financials = np.matrix(self.__financials)
+            self.__financials = np.array(self.__financials)
         return self.__financials
 
     @property
@@ -101,30 +105,24 @@ class MyTicker:
         # financials.to_csv(dist_path / 'financials2.csv')
 
     def get_coeff_matrix(self, start: int, end: int):
-        # self.avg_price[start:end] are the prices before the balance sheet
-        # where P0 = self.avg_price[start:end], P1 = self.avg_price[start + 1:end + 1]
-        # (P0; financials)(coeffs) = P1
-
-        return np.hstack(
-            [
-                self.avg_price[start:end].reshape(-1, 1),
-                self.financials[start:end, 1:].astype(float)
-                - self.financials[start - 1 : end - 1, 1:].astype(float),
-            ]
+        return get_perc_delta(
+            self.financials[start:end, 1:].astype(float),
+            self.financials[start - 1 : end - 1, 1:].astype(float),
         )
 
     def get_coefficients(self, start: int, end: int) -> np.ndarray:
-        # first price is the price before the first financial data
-        # the price to be predicted starts 1 after
-        avg_price = self.avg_price[start + 1 : end + 1].reshape(-1, 1)
-        coeffs = np.linalg.pinv(self.get_coeff_matrix(start, end)) @ avg_price
-        print(self.get_coeff_matrix(start, end))
+        coeff_matrix = self.get_coeff_matrix(start, end)
+        avg_price = get_perc_delta(
+            self.avg_price[start:end],
+            self.avg_price[start - 1 : end - 1],
+        )
+        coeffs = np.linalg.pinv(coeff_matrix) @ avg_price.reshape(-1, 1)
 
         return coeffs
 
     def get_coefficients_results(self, coefficients: np.ndarray, start: int, end: int):
         return (
             self.get_coeff_matrix(start, end) @ coefficients,
-            self.avg_price[start:end],
-            self.financials[start:end, DATE].A1.astype("datetime64[D]"),
+            get_perc_delta(self.avg_price[start:end], self.avg_price[start - 1 : end - 1]),
+            self.financials[start:end, DATE].astype("datetime64[D]"),
         )
