@@ -2,7 +2,6 @@ from datetime import date, timedelta
 import yfinance as yf
 from pathlib import Path
 import numpy as np
-
 from yahoo.timeframes import D1, OPEN
 from .balance_sheet_rows import DATE
 
@@ -21,11 +20,51 @@ def from_yahoo_str_date(_date: date) -> date:
     return date(yy, mm, gg)
 
 
+def get_date_avg(date1: date, date2: date):
+    assert date1 < date2
+    return date1 + (date2 - date1) // 2
+
+
 class MyTicker:
     def __init__(self, ticker: str):
         self.ticker = ticker
+
         self.__financials = None
+
+        self.__price = None
         self.__avg_price = None
+
+    @property
+    def start_date(self):
+        return self.financials[0][DATE]
+
+    @property
+    def end_date(self):
+        return self.financials[-1][DATE]
+
+    @property
+    def price(self):
+        if not self.price_path.exists():
+            self.download_ticker_data(
+                start=self.start_date,
+                end=self.end_date + timedelta(days=90),
+                interval=D1,
+            )
+
+        if self.__price is None:
+            with open(self.price_path) as f:
+                self.__price = [[], []]
+                for line in f.readlines()[3:]:
+                    date, price = line.split(",")[: OPEN + 1]
+                    self.__price[0].append(from_yahoo_str_date(date))
+                    self.__price[1].append(price)
+
+                self.__price = [
+                    np.array(self.__price[0], dtype="datetime64[D]"),
+                    np.array(self.__price[1], dtype="float"),
+                ]
+
+        return self.__price
 
     @property
     def financials(self):
@@ -42,41 +81,34 @@ class MyTicker:
 
     @property
     def avg_price(self):
-        if not self.price_path.exists():
-            financials = self.financials
-            self.download_ticker_data(
-                start=financials[0][DATE],
-                end=financials[-1][DATE] + timedelta(days=90),
-                interval=D1,
-            )
-
         if self.__avg_price is None:
-            with open(self.price_path) as f:
-                self.__avg_price = self.get_avg_price(f.readlines())
-            self.__avg_price = np.array(self.avg_price)
+            self.__avg_price = self.get_avg_price()
 
         return self.__avg_price
 
-    def get_avg_price(self, lines: list[str]):
+    def get_avg_price(self):
         financials = self.financials
 
-        price_index = 3
-        avg = []
+        price_index = 0
+        avg = [[], []]
 
         for date in financials[1:, DATE]:
             _sum = 0
             _len = 0
 
-            parse_line = lambda: lines[price_index].split(",")
-            l = parse_line()
-            while date > from_yahoo_str_date(l[0]):
-                _sum += float(l[OPEN])
+            start_date = self.price[DATE][price_index]
+            while date > self.price[DATE][price_index]:
+                _sum += float(self.price[OPEN][price_index])
                 price_index += 1
                 _len += 1
-                l = parse_line()
-            avg.append(_sum / _len)
 
-        return avg
+            avg[0].append(get_date_avg(start_date, date))
+            avg[1].append(_sum / _len)
+
+        return [
+            np.array(avg[0], dtype="datetime64[D]"),
+            np.array(avg[1], dtype="float"),
+        ]
 
     @property
     def path(self):
@@ -104,25 +136,32 @@ class MyTicker:
         # self.avg_price[start:end] are the prices before the balance sheet
         # where P0 = self.avg_price[start:end], P1 = self.avg_price[start + 1:end + 1]
         # (P0; financials)(coeffs) = P1
-        
+
         return np.hstack(
             [
-                self.avg_price[start:end].reshape(-1, 1),
+                self.avg_price[OPEN][start:end].reshape(-1, 1),
                 self.financials[start:end, 1:].astype(float),
             ]
         )
-    
+
     def get_coefficients(self, start: int, end: int) -> np.ndarray:
         # first price is the price before the first financial data
         # the price to be predicted starts 1 after
-        avg_price = self.avg_price[start + 1 : end + 1].reshape(-1, 1)
+        avg_price = self.avg_price[OPEN][start + 1 : end + 1].reshape(-1, 1)
         coeffs = np.linalg.pinv(self.get_coeff_matrix(start, end)) @ avg_price
 
         return coeffs
 
-    def get_coefficients_results(self, coefficients: np.ndarray, start: int, end: int):
-        return (
-            self.get_coeff_matrix(start, end) @ coefficients,
-            self.avg_price[start:end],
-            self.financials[start:end, DATE].astype("datetime64[D]"),
+    def get_coefficients_result(self, coeffs, start: int, end: int): 
+        return self.get_coeff_matrix(start, end) @ coeffs
+
+    def get_results(self, start: int, end: int, off=20):
+        result = list(
+            self.get_coeff_matrix(start, off + 1) @ self.get_coefficients(start, off)
         )
+
+        for i in range(start + off + 1, end):
+            coefficients = self.get_coefficients(start, i - 1)
+            result.append(self.get_coeff_matrix(start, end)[i] @ coefficients)
+
+        return result
