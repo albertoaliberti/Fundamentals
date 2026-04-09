@@ -67,7 +67,13 @@ p_k
 \end{bmatrix}
 $$
 
-When the system is overdetermined, we estimate the weight vector $\vec{w}$ using a **least squares approach**.
+To solve the system, we use a least squares approach by computing the Moore–Penrose pseudoinverse of $A$:
+
+$$
+\vec{w} = A^{+} \vec{p}
+$$
+
+This provides the best linear approximation when the system is overdetermined.
 
 ---
 
