@@ -142,7 +142,7 @@ expected_prices_s = tk.get_coefficients_result(
 
 ## Results
 
-* Tested on multiple assets (e.g. AAPL, NFLX)
+* Tested on multiple assets (AAPL, NFLX, BYD)
 * Compared predicted vs actual prices
 * Observed limitations of linear assumptions in volatile markets
 
