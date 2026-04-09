@@ -5,10 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "main",
+      "name": "Python: Debug Current File (Auto-Module)",
       "type": "debugpy",
       "request": "launch",
-      "program": "main.py",
+      "cwd": "${workspaceFolder}",
+      "program": "${file}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
       "console": "integratedTerminal"
     }
   ]

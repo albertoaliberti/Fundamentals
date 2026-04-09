@@ -1,0 +1,3 @@
+NFLX = "NFLX"
+BYD = "BYD"
+AAPL = "AAPL"
