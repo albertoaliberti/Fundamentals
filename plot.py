@@ -3,6 +3,7 @@ from yahoo.ticker import MyTicker
 import matplotlib.pyplot as plt
 from yahoo.timeframes import *
 
+
 def plot(startk: int, off: int, ticker: str):
     tk = MyTicker(ticker)
 
@@ -11,8 +12,9 @@ def plot(startk: int, off: int, ticker: str):
         tk.get_coefficients(startk, off), startk, 38
     )
 
-    _, ax = plt.subplots()
-    
+    fig, ax = plt.subplots()
+    fig.canvas.manager.set_window_title(ticker)
+
     ax.plot(
         tk.avg_price[DATE][1:],
         expected_prices,
@@ -40,7 +42,7 @@ def plot(startk: int, off: int, ticker: str):
         label="actual price",
         color="green",
     )
-    
+
     plt.axvline(
         x=tk.avg_price[DATE][off],
         color="white",
@@ -48,5 +50,5 @@ def plot(startk: int, off: int, ticker: str):
         linewidth=2,
     )
 
-    plt.legend()
+    plt.legend(fontsize=12)
     plt.show()
