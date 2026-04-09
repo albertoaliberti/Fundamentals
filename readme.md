@@ -6,7 +6,7 @@ This project explores a simple quantitative approach to financial analysis using
 
 We assume that the price of an asset is influenced by its fundamental data, and we model this relationship as **linear**.
 
-![Example Output](./assets/AAPL.png)
+<!-- ![Example Output](./assets/AAPL.png) -->
 ---
 
 ## Model Assumption
@@ -100,5 +100,5 @@ from plot import plot
 plt.style.use("dark_background")
 
 if __name__ == "__main__":
-    plot(0, 22, tickers.AAPL )
+    plot(0, 22, tickers.AAPL)
 ```
