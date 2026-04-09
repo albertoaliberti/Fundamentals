@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from yahoo.timeframes import *
 
 
-def plot(startk: int, off: int, ticker: str):
+def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
     tk = MyTicker(ticker)
 
     expected_prices = tk.get_results(startk, 38, off)
@@ -50,5 +50,5 @@ def plot(startk: int, off: int, ticker: str):
         linewidth=2,
     )
 
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=legend_fontsize)
     plt.show()
