@@ -80,7 +80,7 @@ This provides the best linear approximation when the system is overdetermined.
 ## Data Assumptions
 
 * Fundamental data is available every 3–4 months
-* The dataset includes BYD, NFLX, APPL starting from 01/01/2015
+* The dataset includes BYD, NFLX, AAPL starting from 01/01/2015
 * The price at index $i$ is approximated as the average price between two fundamental data releases
 
 ---
