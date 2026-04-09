@@ -46,6 +46,7 @@ def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
     plt.axvline(
         x=tk.avg_price[DATE][off],
         color="white",
+        label="end of training period",
         linestyle="--",
         linewidth=2,
     )
