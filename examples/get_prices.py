@@ -1,7 +1,7 @@
 from yahoo.balance_sheet_rows import DATE
 from yahoo.ticker import MyTicker
 import matplotlib.pyplot as plt
-from yahoo.timeframes import *
+from yahoo.constants import *
 import tickers
 
 tk = MyTicker(tickers.NFLX)

@@ -1,19 +1,21 @@
 from yahoo.balance_sheet_rows import DATE
-from yahoo.ticker import MyTicker
+from yahoo.ticker import MyTicker, Tikers
 import matplotlib.pyplot as plt
-from yahoo.timeframes import *
+from yahoo.constants import *
 
 
 def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
     tk = MyTicker(ticker)
 
-    expected_prices = tk.get_results(startk, 38, off)
+    expected_prices, coeff = tk.get_results(startk, 38, off)
     expected_prices_s = tk.get_coefficients_result(
         tk.get_coefficients(startk, off), startk, 38
     )
 
+    print(coeff)
+
     fig, ax = plt.subplots()
-    fig.canvas.manager.set_window_title(ticker)
+    fig.canvas.manager.set_window_title(ticker)  # type: ignore
 
     ax.plot(
         tk.avg_price[DATE][1:],
@@ -24,7 +26,7 @@ def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
 
     ax.plot(
         tk.avg_price[DATE],
-        tk.avg_price[OPEN],
+        tk.avg_price[Candle.O],
         label="actual avg",
         color="yellow",
     )
@@ -38,7 +40,7 @@ def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
 
     ax.plot(
         tk.price[DATE],
-        tk.price[OPEN],
+        tk.price[Candle.O],
         label="actual price",
         color="green",
     )
@@ -53,3 +55,8 @@ def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
 
     plt.legend(fontsize=legend_fontsize)
     plt.show()
+
+plt.style.use("dark_background")
+
+if __name__ == "__main__":
+    plot(0, 22, Tikers.AAPL)

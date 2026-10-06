@@ -1,8 +1,9 @@
 from datetime import date, timedelta
+from enum import Enum
 import yfinance as yf
 from pathlib import Path
 import numpy as np
-from yahoo.timeframes import D1, OPEN
+from yahoo.constants import TimeFrames, Candle, Tikers
 from .balance_sheet_rows import DATE
 
 
@@ -10,12 +11,12 @@ def to_yf_date(_date: date) -> str:
     return _date.strftime("%Y-%m-%d")
 
 
-def from_bloomberg_str_date(_date: date) -> date:
+def from_bloomberg_str_date(_date: str) -> date:
     mm, gg, yy = map(int, _date.split("/"))
     return date(yy, mm, gg)
 
 
-def from_yahoo_str_date(_date: date) -> date:
+def from_yahoo_str_date(_date: str) -> date:
     yy, mm, gg = map(int, _date.split("-"))
     return date(yy, mm, gg)
 
@@ -23,6 +24,8 @@ def from_yahoo_str_date(_date: date) -> date:
 def get_date_avg(date1: date, date2: date):
     assert date1 < date2
     return date1 + (date2 - date1) // 2
+
+
 
 
 class MyTicker:
@@ -48,14 +51,14 @@ class MyTicker:
             self.download_ticker_data(
                 start=self.start_date,
                 end=self.end_date + timedelta(days=90),
-                interval=D1,
+                interval=TimeFrames.D1,
             )
 
         if self.__price is None:
             with open(self.price_path) as f:
                 self.__price = [[], []]
                 for line in f.readlines()[3:]:
-                    date, price = line.split(",")[: OPEN + 1]
+                    date, price = line.split(",")[: Candle.O + 1]
                     self.__price[0].append(from_yahoo_str_date(date))
                     self.__price[1].append(price)
 
@@ -67,16 +70,16 @@ class MyTicker:
         return self.__price
 
     @property
-    def financials(self):
+    def financials(self) -> np.ndarray:
         if self.__financials is None:
             with open(self.financials_path) as f:
-                self.__financials = []
+                file_data = []
                 for row in f.readlines()[1:]:
                     date, *data = row.replace(",", ".").split(";")
-                    self.__financials.append(
+                    file_data.append(
                         [from_bloomberg_str_date(date), *map(float, data)]
                     )
-            self.__financials = np.array(self.__financials)
+            self.__financials = np.array(file_data)
         return self.__financials
 
     @property
@@ -97,8 +100,9 @@ class MyTicker:
             _len = 0
 
             start_date = self.price[DATE][price_index]
+            
             while date > self.price[DATE][price_index]:
-                _sum += float(self.price[OPEN][price_index])
+                _sum += float(self.price[Candle.O][price_index])
                 price_index += 1
                 _len += 1
 
@@ -129,7 +133,8 @@ class MyTicker:
         if not self.path.exists():
             self.path.mkdir()
 
-        price.to_csv(self.price_path)
+        if price is not None:
+            price.to_csv(self.price_path)
         # financials.to_csv(dist_path / 'financials2.csv')
 
     def get_coeff_matrix(self, start: int, end: int):
@@ -139,7 +144,7 @@ class MyTicker:
 
         return np.hstack(
             [
-                self.avg_price[OPEN][start:end].reshape(-1, 1),
+                self.avg_price[Candle.O][start:end].reshape(-1, 1),
                 self.financials[start:end, 1:].astype(float),
             ]
         )
@@ -147,7 +152,7 @@ class MyTicker:
     def get_coefficients(self, start: int, end: int) -> np.ndarray:
         # first price is the price before the first financial data
         # the price to be predicted starts 1 after
-        avg_price = self.avg_price[OPEN][start + 1 : end + 1].reshape(-1, 1)
+        avg_price = self.avg_price[Candle.O][start + 1 : end + 1].reshape(-1, 1)
         coeffs = np.linalg.pinv(self.get_coeff_matrix(start, end)) @ avg_price
 
         return coeffs
@@ -164,4 +169,13 @@ class MyTicker:
             coefficients = self.get_coefficients(start, i - 1)
             result.append(self.get_coeff_matrix(start, end)[i] @ coefficients)
 
-        return result
+        return result, self.get_corr(result, off, end)
+
+    def get_corr(self, results, start, end):
+        avg_y = sum(self.avg_price[1], start) / (end - start + 1)
+        s_y = sum([(price_i - avg_y) ** 2 for price_i in self.avg_price[1]], start)
+
+        s_reg = sum([(result_i[0] - avg_y) ** 2 for result_i in results], start)
+        return s_reg / s_y
+
+
