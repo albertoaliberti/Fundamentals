@@ -5,6 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Python Debugger: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/plot.py",
+      "console": "integratedTerminal"
+    },
+
+    {
       "name": "Python: Debug Current File (Auto-Module)",
       "type": "debugpy",
       "request": "launch",

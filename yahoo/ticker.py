@@ -144,6 +144,7 @@ class MyTicker:
 
         return np.hstack(
             [
+                np.ones((end - start, 1)),
                 self.avg_price[Candle.O][start:end].reshape(-1, 1),
                 self.financials[start:end, 1:].astype(float),
             ]
@@ -161,21 +162,28 @@ class MyTicker:
         return self.get_coeff_matrix(start, end) @ coeffs
 
     def get_results(self, start: int, end: int, off=20):
+        # training
+        coefficients = self.get_coefficients(start, off)
         result = list(
-            self.get_coeff_matrix(start, off + 1) @ self.get_coefficients(start, off)
+            self.get_coeff_matrix(start, off) @ coefficients
         )
 
-        for i in range(start + off + 1, end):
-            coefficients = self.get_coefficients(start, i - 1)
-            result.append(self.get_coeff_matrix(start, end)[i] @ coefficients)
+        for i in range(off, end):
+            result.append(self.get_coeff_matrix(0, end)[i] @ coefficients)
+            coefficients = self.get_coefficients(start, i + 1)
 
         return result, self.get_corr(result, off, end)
 
-    def get_corr(self, results, start, end):
-        avg_y = sum(self.avg_price[1], start) / (end - start + 1)
-        s_y = sum([(price_i - avg_y) ** 2 for price_i in self.avg_price[1]], start)
+    def get_corr(self, result, start, end):
 
-        s_reg = sum([(result_i[0] - avg_y) ** 2 for result_i in results], start)
-        return s_reg / s_y
+        y = self.avg_price[1][start + 1:end + 1]
+        y_hat = np.array([result_i[0] for result_i in result[start:end]])
+
+        avg_y = np.mean(y)
+
+        s_y = np.sum((y - avg_y) ** 2)
+        s_error = np.sum((y - y_hat) ** 2)
+
+        return 1 - s_error / s_y
 
 

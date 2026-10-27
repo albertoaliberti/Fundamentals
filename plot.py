@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from yahoo.constants import *
 
 
-def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
+def plot(startk: int, off: int, end: int, ticker: str, legend_fontsize=None):
     tk = MyTicker(ticker)
 
-    expected_prices, coeff = tk.get_results(startk, 38, off)
+    expected_prices, coeff = tk.get_results(startk, end, off)
     expected_prices_s = tk.get_coefficients_result(
-        tk.get_coefficients(startk, off), startk, 38
+        tk.get_coefficients(startk, off), startk, end
     )
 
     print(coeff)
@@ -18,21 +18,21 @@ def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
     fig.canvas.manager.set_window_title(ticker)  # type: ignore
 
     ax.plot(
-        tk.avg_price[DATE][1:],
+        tk.avg_price[DATE][startk:end],
         expected_prices,
         label="expected avg dynamic",
         color="red",
     )
 
     ax.plot(
-        tk.avg_price[DATE],
-        tk.avg_price[Candle.O],
+        tk.avg_price[DATE][startk:end],
+        tk.avg_price[Candle.O][startk:end],
         label="actual avg",
         color="yellow",
     )
 
     ax.plot(
-        tk.avg_price[DATE][1:],
+        tk.avg_price[DATE][startk:end],
         expected_prices_s,
         label="expected avg static",
         color="purple",
@@ -56,7 +56,8 @@ def plot(startk: int, off: int, ticker: str, legend_fontsize=None):
     plt.legend(fontsize=legend_fontsize)
     plt.show()
 
+
 plt.style.use("dark_background")
 
 if __name__ == "__main__":
-    plot(0, 22, Tikers.AAPL)
+    plot(0, 22, 36, Tikers.BYD)

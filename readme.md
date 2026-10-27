@@ -52,18 +52,18 @@ where:
 $$
 A =
 \begin{bmatrix}
-p_0 & f_{1,1} & \dots & f_{1,n} \\
-p_1 & f_{2,1} & \dots & f_{2,n} \\
+p_1 & f_{1,1} & \dots & f_{1,n} \\
+p_2 & f_{2,1} & \dots & f_{2,n} \\
 \vdots & \vdots & \ddots & \vdots \\
-p_{k-1} & f_{k,1} & \dots & f_{k,n}
+p_{k} & f_{k,1} & \dots & f_{k,n}
 \end{bmatrix}
 \quad
 \vec{p} =
 \begin{bmatrix}
-p_1 \\
 p_2 \\
+p_3 \\
 \vdots \\
-p_k
+p_k+1
 \end{bmatrix}
 $$
 
